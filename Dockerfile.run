@@ -1,0 +1,26 @@
+FROM node:20-alpine
+
+# Créer un utilisateur non-root
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Définir le répertoire de travail
+WORKDIR /app
+
+# Copier uniquement les fichiers nécessaires depuis l'image de build
+COPY --from=wik-dps-tp01-build /app/dist ./dist
+COPY package.json ./
+
+# Installer uniquement les dépendances de production
+RUN npm install --omit=dev
+
+# Changer les permissions pour l'utilisateur non-root
+RUN chown -R appuser:appgroup /app
+
+# Passer à l'utilisateur non-root
+USER appuser
+
+# Exposer le port utilisé par l'application
+EXPOSE 3000
+
+# Définir la commande pour démarrer l'application
+CMD ["node", "dist/server.js"]
